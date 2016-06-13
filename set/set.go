@@ -1,5 +1,9 @@
 package set
 
+import (
+	"fmt"
+)
+
 // TODO: Read up on interface equality.
 
 // Set represents a mathematical set, a collection which tracks the absence
@@ -16,6 +20,7 @@ type Set interface {
 	Intersect(other Set) Set
 	ToSlice() []interface{} 
 	Iter() Iterator
+	fmt.Stringer // TODO: This may not belong
 }
 
 type Iterator interface {
@@ -122,4 +127,8 @@ func (h *HashSet) Iter() Iterator {
 		length: len(elems),
 		pos: 0,
 	}
+}
+
+func (h *HashSet) String() string {
+	return "HashSet"
 }

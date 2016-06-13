@@ -69,6 +69,10 @@ func (s *SortedSet) ToSlice() []interface{} {
 	return nil
 }
 
+func (s *SortedSet) String() string {
+	return "SortedSet" 
+}
+
 func (s *SortedSet) First() (interface{}, bool) {
 	return nil, false
 }
