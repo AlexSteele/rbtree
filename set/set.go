@@ -1,13 +1,7 @@
 package set
 
-import (
-	"fmt"
-)
-
-// TODO: Read up on interface equality.
-
-// Set represents a mathematical set, a collection which tracks the absence
-// or presence of values. Its three core operations, Add, Remove, and Contains, are
+// Set represents a mathematical set, a collection which tracks the absence or
+// presence of values. Its three core operations, Add, Remove, and Contains, are
 // guaranteed to run in constant time.
 type Set interface {
 	Add(elem interface{}) interface{} 
@@ -20,7 +14,7 @@ type Set interface {
 	Intersect(other Set) Set
 	ToSlice() []interface{} 
 	Iter() Iterator
-	fmt.Stringer // TODO: This may not belong
+	String() string 
 }
 
 type Iterator interface {
