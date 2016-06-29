@@ -1,4 +1,4 @@
-package sortedset
+package treeset
 
 import (
 	"testing"
