@@ -5,7 +5,7 @@ import (
 )
 
 // SortedSet represents a set whose elements fall under a total order -
-// each has a place relative to all others in the set. 
+// each has a place relative to all others in the set.
 type SortedSet interface {
 	set.Set
 	First() (interface{}, bool)
@@ -13,34 +13,34 @@ type SortedSet interface {
 	Last() (interface{}, bool)
 }
 
-type Comparator func(interface{}, interface{}) int 
+type Comparator func(interface{}, interface{}) int
 
-type sortedSetIter struct {}
+type sortedSetIter struct{}
 
 func (i *sortedSetIter) Next() (interface{}, bool) {
 	return nil, false
 }
 
-// TreeSet is a red-black tree implementation of SortedSet. 
+// TreeSet is a red-black tree implementation of SortedSet.
 type TreeSet struct {
-	root *treeNode
-	cmp Comparator
-	length int 
+	root   *treeNode
+	cmp    Comparator
+	length int
 }
 
-type color int
+type color bool
 
 const (
-	red color = iota
-	black 
+	red   = color(true)
+	black = color(false)
 )
 
 type treeNode struct {
-	c color
-	elem interface{}
-	parent *treeNode 
-	leftChild *treeNode
-	rightChild *treeNode 
+	c          color
+	elem       interface{}
+	parent     *treeNode
+	leftChild  *treeNode
+	rightChild *treeNode
 }
 
 const nilNode = &treeNode{
@@ -50,20 +50,20 @@ const nilNode = &treeNode{
 func New(cmp Comparator) SortedSet {
 	return &TreeSet{
 		root: nilNode,
-		cmp: Comparator,
-	} 
+		cmp:  Comparator,
+	}
 }
 
 func (t *TreeSet) Add(elem interface{}) interface{} {
 	curr, parent := t.root, t.root
 	var cmp int
-	for curr := nil {
-		parent = curr 
+	for curr != nilNode {
+		parent = curr
 		cmp = t.cmp(elem, curr)
 		if cmp == 0 {
-			old := curr.elem 
+			old := curr.elem
 			curr.elem = elem
-			return old 
+			return old
 		} else if cmp < 0 {
 			curr = curr.leftChild
 		} else {
@@ -72,11 +72,11 @@ func (t *TreeSet) Add(elem interface{}) interface{} {
 	}
 
 	toAdd := &treeNode{
-		c: red,
-		elem: elem,
-		parent: parent,
-		leftChild: nilNode,
-		rightChild: nilNode, 
+		c:          red,
+		elem:       elem,
+		parent:     parent,
+		leftChild:  nilNode,
+		rightChild: nilNode,
 	}
 
 	if parent != nilNode {
@@ -84,7 +84,7 @@ func (t *TreeSet) Add(elem interface{}) interface{} {
 			parent.leftChild = toAdd
 		} else {
 			parent.rightChild = toAdd
-		}		
+		}
 	}
 
 	t.length += 1
@@ -93,71 +93,61 @@ func (t *TreeSet) Add(elem interface{}) interface{} {
 }
 
 func rbInsertFixup(node *treeNode) {
-	parent := node.parent 
-	if parent == nilNode {
+	if node.parent == nilNode {
+		t.c = black
 		t.root = node
-	} else if parent.c == black {
+	} else if node.parent.c == black {
 		// Tree is valid.
 	} else if uncle := getUncle(node); uncle.c == red {
-		parent.c = black
+		node.parent.c = black
 		uncle.c = black
-		parent.parent = red
-		rbInsertFixup(parent.parent)
+		node.parent.parent = red
+		rbInsertFixup(node.parent.parent)
 	} else {
-		grandparent := node.parent.parent
-		if (parent == grandparent.leftChild && node == parent.rightChild) {
-			rotateLeft(parent)
+		if node.parent == node.parent.parent.leftChild && node == node.parent.rightChild {
+			rotateLeft(node.parent)
 			node = node.leftChild
-		} else if (parent == grandparent.rightChild && node == parent.leftChild) {
-			rotateRight(parent)
+		} else if node.parent == node.parent.parent.rightChild && node == node.parent.leftChild {
+			rotateRight(node.parent)
 			node = node.rightChild
 		}
 
 		node.parent.c = black
 		node.parent.parent.c = red
 		if node == node.parent.leftChild {
-			rotateRight(parent.parent)
+			rotateRight(node.parent.parent)
 		} else {
-			rotateLeft(parent.parent) 
+			rotateLeft(node.parent.parent)
 		}
-	}	
+	}
 }
 
-// Assumes that the grandparent is not nilNode. Will return nilNode if the uncle
-// is nil. 
 func getUncle(node *treeNode) *treeNode {
 	grandparent := node.parent.parent
 	if node.parent == grandparent.leftChild {
-		return grandparent.rightChild 
+		return grandparent.rightChild
 	} else {
-		return grandparent.leftChild 
+		return grandparent.leftChild
 	}
 }
 
-// Assumes that the grandparent is not nilNode and that node.leftChild is the
-// nilNode. 
 func rotateLeft(node *treeNode) {
-	node.leftChild = node.parent
-	if node.parent == node.parent.parent.leftChild {
-		node.parent.parent.leftChild = node
-	} else {
-		node.parent.parent.rightChild = node
-	}
-	node.parent = node.parent.parent
-	node.leftChild.parent = node 
+	node.parent.leftChild = node.rightChild
+	node.rightChild.parent = node.parent
+	node.parent = node.rightChild
+	node.rightChild = node.rightChild.leftChild
+	node.rightChild.parent = node
+	node.parent.leftChild = node
+
 }
 
-// Assumes that the grandparent is not the nilNode and that node.rightChild is
-// the nilNode.
 func rotateRight(node *treeNode) {
-	node.rightChild = node.parent
-	if node.parent == node.parent.parent.leftChild {
-		node.parent.parent.leftChild = node
-	} else {
-		node.parent.parent.rightChild = node
-	}
-	node.parent = node.parent.parent
-	node.rightChild.parent = node 
+	node.parent.rightChild = node.leftChild
+	node.leftChild.parent = node.parent
+	node.parent = node.leftChild
+	node.leftChild = node.leftChild.rightChild
+	node.leftChild.parent = node
+	node.parent.rightChild = node
 }
 
 func (t *TreeSet) Remove(elem interface{}) bool {
@@ -167,16 +157,16 @@ func (t *TreeSet) Remove(elem interface{}) bool {
 func (t *TreeSet) Contains(elem interface{}) bool {
 	curr := t.root
 	for curr != nilNode {
-		cmp := t.cmp(elem, curr) 
+		cmp := t.cmp(elem, curr)
 		if cmp == 0 {
-			return true 
+			return true
 		} else if cmp < 0 {
 			curr = curr.leftChild
 		} else {
 			curr = curr.leftChild
 		}
 	}
-	return false 
+	return false
 }
 
 func (t *TreeSet) Clear() {
@@ -189,11 +179,11 @@ func (t *TreeSet) Length() int {
 }
 
 func (t *TreeSet) IsEmpty() bool {
-	return t.length == 0 
+	return t.length == 0
 }
 
 func (t *TreeSet) Union(other Set) Set {
-	return nil 
+	return nil
 }
 
 func (t *TreeSet) Intersect(other Set) Set {
@@ -201,7 +191,7 @@ func (t *TreeSet) Intersect(other Set) Set {
 }
 
 func (t *TreeSet) Iter() Iterator {
-	return nil 
+	return nil
 }
 
 func (t *TreeSet) ToSlice() []interface{} {
@@ -209,22 +199,22 @@ func (t *TreeSet) ToSlice() []interface{} {
 }
 
 func (t *TreeSet) String() string {
-	return "SortedSet" 
+	return "SortedSet"
 }
 
 func (t *TreeSet) First() (interface{}, bool) {
 	if t.root == nilNode {
-		return nil, false 
+		return nil, false
 	}
 	curr := t.root
 	for curr.leftChild != nilNode {
-		curr = curr.leftChild 
+		curr = curr.leftChild
 	}
-	return curr, true 
+	return curr, true
 }
 
 func (t *TreeSet) Nth(i int) (interface{}, bool) {
-	return nil, false 
+	return nil, false
 }
 
 func (t *TreeSet) Last() (interface{}, bool) {
@@ -235,5 +225,5 @@ func (t *TreeSet) Last() (interface{}, bool) {
 	for curr.rightChild != nilNode {
 		curr = curr.rightChild
 	}
-	return curr, true 
+	return curr, true
 }
