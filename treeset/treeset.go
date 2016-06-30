@@ -14,8 +14,8 @@ type TreeSet struct {
 type colorT bool
 
 const (
-	red   = colorT(true)
-	black = colorT(false)
+	red colorT   = true
+	black colorT = false
 )
 
 type node struct {
@@ -68,8 +68,8 @@ func (t *TreeSet) Add(elem interface{}) interface{} {
 		}
 	}
 
-	t.length += 1
 	t.rbInsertFixup(toAdd)
+	t.length += 1
 	return nil
 }
 
@@ -113,7 +113,11 @@ func getUncle(node *node) *node {
 }
 
 func rotateLeft(node *node) {
-	node.parent.leftChild = node.rightChild
+	if node == node.parent.leftChild {
+		node.parent.leftChild = node.rightChild				
+	} else {
+		node.parent.rightChild = node.rightChild
+	}
 	node.rightChild.parent = node.parent
 	node.parent = node.rightChild
 	node.rightChild = node.rightChild.leftChild
@@ -124,6 +128,11 @@ func rotateLeft(node *node) {
 }
 
 func rotateRight(node *node) {
+	if node == node.parent.leftChild {
+		node.parent.leftChild = node.leftChild
+	} else {
+		node.parent.rightChild = node.leftChild
+	}
 	node.parent.rightChild = node.leftChild
 	node.leftChild.parent = node.parent
 	node.parent = node.leftChild
@@ -135,22 +144,155 @@ func rotateRight(node *node) {
 }
 
 func (t *TreeSet) Remove(elem interface{}) bool {
-	return false
+	toRemove := t.getNode(elem)
+	if toRemove == nil {
+		return false
+	}
+	
+	if successor := getSuccessor(toRemove); successor != nilNode {
+		toRemove.elem = successor.elem
+		toRemove = successor
+	}
+	
+	// toRemove has either 1 or 0 non-nil children. Replace
+	// toRemove with its child.
+	var child *node
+	if toRemove.leftChild == nilNode {
+		child = toRemove.rightChild
+	} else {
+		child = toRemove.leftChild
+	}
+	if toRemove == toRemove.parent.leftChild {
+		toRemove.parent.leftChild = child
+	} else {
+		toRemove.parent.rightChild = child
+	}
+	if child != nilNode {
+		child.parent = toRemove.parent
+	}
+
+	// Restore the tree's invariants.
+	if toRemove.color == red {
+		// toRemove is not the root. We're done.
+	} else if child.color == red {
+		// toRemove is not the root. It is black and child is red. 
+		child.color = black
+	} else {
+		t.rbRemoveFixup(child)
+	}
+	
+	t.length -= 1
+	return true
+}
+
+func (t *TreeSet) rbRemoveFixup(child *node) {
+	
+	// Both toRemove and child are black (with child possibly nilNode)
+	// toRemove could be the root.
+	// toRemove could be the successor to the thing we actually want to remove.
+
+	// TODO: WHAT IF CHILD IS NILNODE? 
+
+	for {
+		if child.parent == nilNode {
+			// child is the new root.
+			t.root = child
+			return 
+		}
+		
+		var sibling *node
+		if child == child.parent.leftChild {
+			sibling = child.parent.rightChild
+		} else {
+			sibling = child.parent.leftChild
+		}
+
+		if sibling.color == red {
+			child.parent.color = red
+			sibling.color = black
+			if child == child.parent.leftChild {
+				rotateLeft(child.parent)
+				sibling = child.parent.rightChild // TODO: HOT-SPOT. Sibling may be incorrect (here and below).
+			} else {
+				rotateRight(child.parent)
+				sibling = child.parent.leftChild
+			}
+		}
+		if sibling.color == black &&
+			sibling.leftChild.color == black &&
+			sibling.rightChild.color == black {
+
+			sibling.color = red
+			if child.parent.color == black {
+				
+				// Repeat the fixup with the parent.
+				child = child.parent
+				continue 
+			} else {
+				child.parent.color = black
+			}
+		} else {
+			if sibling.color == black {
+				if child == child.parent.leftChild &&
+					sibling.rightChild.color == black &&
+					sibling.leftChild.color == red {
+
+					rotateRight(sibling)
+				} else if child == child.parent.rightChild &&
+					sibling.leftChild.color == black &&
+					sibling.rightChild.color == red {
+
+					sibling.color = red
+					sibling.rightChild.color = black
+					rotateLeft(sibling)
+				}
+			}
+
+			sibling.color = child.parent.color
+			child.parent.color = black
+
+			if child == child.parent.leftChild {
+				sibling.rightChild.color = black
+				rotateLeft(child.parent)
+			} else {
+				sibling.leftChild.color = black
+				rotateRight(child.parent)
+			}
+		}
+		
+		return
+	}
 }
 
 func (t *TreeSet) Contains(elem interface{}) bool {
+	return t.getNode(elem) != nil
+}
+
+// Returns nil if no node with the given element exists.
+func (t *TreeSet) getNode(elem interface{}) *node {
 	curr := t.root
 	for curr != nilNode {
 		cmp := t.cmp(elem, curr)
 		if cmp == 0 {
-			return true
+			return curr
 		} else if cmp < 0 {
 			curr = curr.leftChild
 		} else {
 			curr = curr.leftChild
 		}
 	}
-	return false
+	return nil
+}
+
+func getSuccessor(n *node) *node {
+	curr := n.rightChild
+	if curr == nilNode {
+		return curr
+	}
+	for curr.leftChild != nil {
+		curr = curr.leftChild
+	}
+	return curr 
 }
 
 func (t *TreeSet) First() (interface{}, bool) {
