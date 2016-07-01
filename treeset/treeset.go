@@ -40,7 +40,7 @@ func (t *TreeSet) Add(elem interface{}) interface{} {
 	var cmp int
 	for curr != nilNode {
 		parent = curr
-		cmp = t.cmp(elem, curr)
+		cmp = t.cmp(elem, curr.elem)
 		if cmp == 0 {
 			old := curr.elem
 			curr.elem = elem
@@ -191,9 +191,13 @@ func (t *TreeSet) rbRemoveFixup(child *node) {
 	// toRemove could be the root.
 	// toRemove could be the successor to the thing we actually want to remove.
 
-	// TODO: WHAT IF CHILD IS NILNODE? 
+	// TODO: WHAT IF CHILD IS NILNODE?
+	if child == nilNode {
+		return
+	}
 
 	for {
+		// TODO: MAY BE if "child.parent == nil"
 		if child.parent == nilNode {
 			// child is the new root.
 			t.root = child
@@ -272,7 +276,7 @@ func (t *TreeSet) Contains(elem interface{}) bool {
 func (t *TreeSet) getNode(elem interface{}) *node {
 	curr := t.root
 	for curr != nilNode {
-		cmp := t.cmp(elem, curr)
+		cmp := t.cmp(elem, curr.elem)
 		if cmp == 0 {
 			return curr
 		} else if cmp < 0 {
