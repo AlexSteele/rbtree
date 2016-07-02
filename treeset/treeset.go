@@ -30,8 +30,9 @@ var nilNode = &node{color: black}
 
 func New(cmp set.Comparator) *TreeSet {
 	return &TreeSet{
-		root: nilNode,
-		cmp:  cmp,
+		root:   nilNode,
+		cmp:    cmp,
+		length: 0,
 	}
 }
 
@@ -74,32 +75,38 @@ func (t *TreeSet) Add(elem interface{}) interface{} {
 }
 
 func (t *TreeSet) rbInsertFixup(node *node) {
-	if node.parent == nilNode {
-		node.color = black
-		t.root = node
-	} else if node.parent.color == black {
-		// Tree is valid.
-	} else if uncle := getUncle(node); uncle.color == red {
-		node.parent.color = black
-		uncle.color = black
-		node.parent.parent.color = red
-		t.rbInsertFixup(node.parent.parent)
-	} else {
-		if node.parent == node.parent.parent.leftChild && node == node.parent.rightChild {
-			t.rotateLeft(node.parent)
-			node = node.leftChild
-		} else if node.parent == node.parent.parent.rightChild && node == node.parent.leftChild {
-			t.rotateRight(node.parent)
-			node = node.rightChild
-		}
+	for {
+		if node.parent == nilNode {
+			node.color = black
+			t.root = node
+		} else if node.parent.color == black {
+			// Tree is valid.
+		} else if uncle := getUncle(node); uncle.color == red {
+			node.parent.color = black
+			uncle.color = black
+			node.parent.parent.color = red
 
-		node.parent.color = black
-		node.parent.parent.color = red
-		if node == node.parent.leftChild {
-			t.rotateRight(node.parent.parent)
+			// Repeat the fixup with the grandparent.
+			node = node.parent.parent
+			continue
 		} else {
-			t.rotateLeft(node.parent.parent)
+			if node.parent == node.parent.parent.leftChild && node == node.parent.rightChild {
+				t.rotateLeft(node.parent)
+				node = node.leftChild
+			} else if node.parent == node.parent.parent.rightChild && node == node.parent.leftChild {
+				t.rotateRight(node.parent)
+				node = node.rightChild
+			}
+
+			node.parent.color = black
+			node.parent.parent.color = red
+			if node == node.parent.leftChild {
+				t.rotateRight(node.parent.parent)
+			} else {
+				t.rotateLeft(node.parent.parent)
+			}
 		}
+		return
 	}
 }
 
@@ -152,7 +159,7 @@ func (t *TreeSet) Remove(elem interface{}) bool {
 	if toRemove == nil {
 		return false
 	}
-	
+
 	if successor := getSuccessor(toRemove); successor != nilNode {
 		toRemove.elem = successor.elem
 		toRemove = successor
@@ -164,12 +171,16 @@ func (t *TreeSet) Remove(elem interface{}) bool {
 	if toRemove.leftChild == nilNode {
 		child = toRemove.rightChild
 	} else {
+		// child could be nilNode.
 		child = toRemove.leftChild
 	}
+	
 	if toRemove == toRemove.parent.leftChild {
 		toRemove.parent.leftChild = child
-	} else {
+	} else if toRemove == toRemove.parent.rightChild {
 		toRemove.parent.rightChild = child
+	} else {
+		t.root = child
 	}
 	if child != nilNode {
 		child.parent = toRemove.parent
@@ -195,16 +206,8 @@ func (t *TreeSet) rbRemoveFixup(child *node) {
 	// toRemove could be the root.
 	// toRemove could be the successor to the thing we actually want to remove.
 
-	// TODO: WHAT IF CHILD IS NILNODE?
-	if child == nilNode {
-		return
-	}
-
 	for {
-		// TODO: MAY BE if "child.parent == nil"
-		if child.parent == nilNode {
-			// child is the new root.
-			t.root = child
+		if child.parent == nilNode || child.parent == nil {
 			return 
 		}
 		
@@ -220,7 +223,7 @@ func (t *TreeSet) rbRemoveFixup(child *node) {
 			sibling.color = black
 			if child == child.parent.leftChild {
 				t.rotateLeft(child.parent)
-				sibling = child.parent.rightChild // TODO: HOT-SPOT. Sibling may be incorrect (here and below).
+				sibling = child.parent.rightChild
 			} else {
 				t.rotateRight(child.parent)
 				sibling = child.parent.leftChild
@@ -297,7 +300,7 @@ func getSuccessor(n *node) *node {
 	if curr == nilNode {
 		return curr
 	}
-	for curr.leftChild != nil {
+	for curr.leftChild != nilNode {
 		curr = curr.leftChild
 	}
 	return curr 

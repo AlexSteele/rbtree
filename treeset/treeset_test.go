@@ -98,17 +98,81 @@ func TestAdd_DuplicateElement(t *testing.T) {
 	}
 }
 
-func TestRemove_Root(t *testing.T) {
+// --Root removals-----
+
+func TestRemove_RootIsOnlyElem(t *testing.T) {
 	s := New(StringComparator)
 	s.Add("abc")
 	if !s.Remove("abc") {
-		t.Fatal("Failed to remove root.")
+		t.Fatal("Failed to remove abc.")
 	}
 	if s.Length() != 0 {
 		t.Fatal("Removal of root didn't set length.")
 	}
 	if s.Contains("abc") {
-		t.Fatal("Set still contains removed element.")
+		t.Fatal("Set still contains abc.")
+	}
+}
+
+func TestRemove_RootHasRightChild(t *testing.T) {
+	s := New(StringComparator)
+	s.Add("a")
+	s.Add("b")
+	if !s.Remove("a") {
+		t.Fatal("Failed to remove a.")
+	}
+	if s.Length() != 1 {
+		t.Fatal("Removal of root didn't set length.")
+	}
+	if s.Contains("a") {
+		t.Fatal("Set still contains a.")
+	}
+	if !s.Contains("b") {
+		t.Fatal("Set doesn't contain b.")
+	}
+}
+
+func TestRemove_RootHasRightChildWithLeftChild(t *testing.T) {
+	s := New(StringComparator)
+	s.Add("b")
+	s.Add("d")
+	s.Add("c")
+	if !s.Remove("b") {
+		t.Fatal("Failed to remove b.")
+	}
+	if s.Length() != 2 {
+		t.Fatal("Removal of root didn't set length.")
+	}
+	if s.Contains("b") {
+		t.Fatal("Set still contains b.")
+	}
+	if !s.Contains("c") {
+		t.Fatal("Set doesn't contain c.")
+	}
+	if !s.Contains("d") {
+		t.Fatal("Set doesn't contain d.")
+	}
+}
+
+func TestRemove_RootHasLeftAndRightChildren(t *testing.T) {
+	s := New(StringComparator)
+	s.Add("b")
+	s.Add("a")
+	s.Add("c")
+	if !s.Remove("b") {
+		t.Fatal("Failed to remove b.")
+	}
+	if s.Length() != 2 {
+		t.Fatal("Removal of root didn't set length.")
+	}
+	if s.Contains("b") {
+		t.Fatal("Set still contains b.")
+	}
+	if !s.Contains("a") {
+		t.Fatal("Set doesn't contain a.")
+	}
+	if !s.Contains("c") {
+		t.Fatal("Set doesn't contain c.")
 	}
 }
 
@@ -124,7 +188,7 @@ func TestRemove_NonRootLeaf(t *testing.T) {
 		t.Fatal("Removal of element didn't set length.")
 	}
 	if s.Contains("d") {
-		t.Fatal("Set still contains removed element.")
+		t.Fatal("Set still contains d.")
 	}
 
 	s.Add("b")
@@ -135,7 +199,7 @@ func TestRemove_NonRootLeaf(t *testing.T) {
 		t.Fatal("Removal of element didn't set length.")
 	}
 	if s.Contains("b") {
-		t.Fatal("Set still contains removed element.")
+		t.Fatal("Set still contains b.")
 	}
 }
 
@@ -145,16 +209,61 @@ func TestRemove_Bulk(t *testing.T) {
 	for _, v := range elems {
 		s.Add(v)
 	}
-	for _, v := range elems {
-		if ! s.Remove(v) {
+	for i, v := range elems {
+		if !s.Remove(v) {
 			t.Fatalf("Failed to remove %v", v)
 		}
+		if s.Contains(v) {
+			t.Fatalf("Set still contained %v", v)
+		}
+		if l := s.Length(); l != len(elems) - i - 1 {
+			t.Fatalf("Set's length improperly set. Expected %v. Got %v",
+				s.Length(), len(elems) - i - 1)
+		}
+		for j := i + 1; j < len(elems); j++ {
+			if !s.Contains(elems[j]) {
+				t.Fatalf("%v marked as removed after removing %v", v, elems[j])
+			}
+		}
 	}
-	
+}
+
+func TestRemove_LeftTree(t *testing.T) {
+	s := New(IntComparator)
+	elems := []int{100, 50, 150, 75, 125, 25, 175, 60, 80, 10, 5}
+	leftTree := []int{50, 25, 75, 60, 80, 10, 5}
+	for _, v := range elems {
+		s.Add(v)
+	}
+	for _, v := range leftTree {
+		if !s.Remove(v) {
+			t.Fatalf("Failed to remove %v", v)
+		}
+		if s.Contains(v) {
+			t.Fatalf("Set still contained %v", v)
+		}
+	}
+}
+
+func TestRemove_RightTree(t *testing.T) {
+	s := New(IntComparator)
+	elems := []int{100, 50, 150, 75, 125, 25, 175, 60, 80, 10, 5, 180, 165, 200}
+	rightTree := []int{150, 175, 180, 165, 200}
+	for _, v := range elems {
+		s.Add(v)
+	}
+	for _, v := range rightTree {
+		if !s.Remove(v) {
+			t.Fatalf("Failed to remove %v", v)
+		}
+		if s.Contains(v) {
+			t.Fatalf("Set still contained %v", v)
+		}
+	}
 }
 
 func TestContains(t *testing.T) {
-	
+	// Tested implicitly. 
 }
 
 func TestClear(t *testing.T) {
@@ -178,7 +287,6 @@ func TestClear(t *testing.T) {
 }
 
 func TestLength(t *testing.T) {
-	t.Skip() // TODO: REMOVE
 	s := New(IntComparator)
 	elems := []int{19, 73, 930, 1694, 3910, 82, 17, 16, 15, 14, 91}
 	if s.Length() != 0 {
