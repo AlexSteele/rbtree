@@ -203,8 +203,6 @@ func (t *TreeSet) Remove(elem interface{}) bool {
 func (t *TreeSet) rbRemoveFixup(child *node) {
 	
 	// Both toRemove and child are black (with child possibly nilNode)
-	// toRemove could be the root.
-	// toRemove could be the successor to the thing we actually want to remove.
 
 	for {
 		if child.parent == nilNode || child.parent == nil {
