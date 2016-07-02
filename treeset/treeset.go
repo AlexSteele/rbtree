@@ -86,23 +86,24 @@ func (t *TreeSet) rbInsertFixup(node *node) {
 		t.rbInsertFixup(node.parent.parent)
 	} else {
 		if node.parent == node.parent.parent.leftChild && node == node.parent.rightChild {
-			rotateLeft(node.parent)
+			t.rotateLeft(node.parent)
 			node = node.leftChild
 		} else if node.parent == node.parent.parent.rightChild && node == node.parent.leftChild {
-			rotateRight(node.parent)
+			t.rotateRight(node.parent)
 			node = node.rightChild
 		}
 
 		node.parent.color = black
 		node.parent.parent.color = red
 		if node == node.parent.leftChild {
-			rotateRight(node.parent.parent)
+			t.rotateRight(node.parent.parent)
 		} else {
-			rotateLeft(node.parent.parent)
+			t.rotateLeft(node.parent.parent)
 		}
 	}
 }
 
+// Returns nilNode if node has no uncle.
 func getUncle(node *node) *node {
 	grandparent := node.parent.parent
 	if node.parent == grandparent.leftChild {
@@ -112,11 +113,13 @@ func getUncle(node *node) *node {
 	}
 }
 
-func rotateLeft(node *node) {
+func (t *TreeSet) rotateLeft(node *node) {
 	if node == node.parent.leftChild {
 		node.parent.leftChild = node.rightChild				
-	} else {
+	} else if node == node.parent.rightChild {
 		node.parent.rightChild = node.rightChild
+	} else {
+		t.root = node.rightChild
 	}
 	node.rightChild.parent = node.parent
 	node.parent = node.rightChild
@@ -127,11 +130,13 @@ func rotateLeft(node *node) {
 	node.parent.leftChild = node
 }
 
-func rotateRight(node *node) {
+func (t *TreeSet) rotateRight(node *node) {
 	if node == node.parent.leftChild {
 		node.parent.leftChild = node.leftChild
-	} else {
+	} else if node == node.parent.rightChild {
 		node.parent.rightChild = node.leftChild
+	} else {
+		t.root = node.leftChild
 	}
 	node.parent.rightChild = node.leftChild
 	node.leftChild.parent = node.parent
@@ -215,10 +220,10 @@ func (t *TreeSet) rbRemoveFixup(child *node) {
 			child.parent.color = red
 			sibling.color = black
 			if child == child.parent.leftChild {
-				rotateLeft(child.parent)
+				t.rotateLeft(child.parent)
 				sibling = child.parent.rightChild // TODO: HOT-SPOT. Sibling may be incorrect (here and below).
 			} else {
-				rotateRight(child.parent)
+				t.rotateRight(child.parent)
 				sibling = child.parent.leftChild
 			}
 		}
@@ -241,14 +246,14 @@ func (t *TreeSet) rbRemoveFixup(child *node) {
 					sibling.rightChild.color == black &&
 					sibling.leftChild.color == red {
 
-					rotateRight(sibling)
+					t.rotateRight(sibling)
 				} else if child == child.parent.rightChild &&
 					sibling.leftChild.color == black &&
 					sibling.rightChild.color == red {
 
 					sibling.color = red
 					sibling.rightChild.color = black
-					rotateLeft(sibling)
+					t.rotateLeft(sibling)
 				}
 			}
 
@@ -257,10 +262,10 @@ func (t *TreeSet) rbRemoveFixup(child *node) {
 
 			if child == child.parent.leftChild {
 				sibling.rightChild.color = black
-				rotateLeft(child.parent)
+				t.rotateLeft(child.parent)
 			} else {
 				sibling.leftChild.color = black
-				rotateRight(child.parent)
+				t.rotateRight(child.parent)
 			}
 		}
 		
@@ -282,7 +287,7 @@ func (t *TreeSet) getNode(elem interface{}) *node {
 		} else if cmp < 0 {
 			curr = curr.leftChild
 		} else {
-			curr = curr.leftChild
+			curr = curr.rightChild
 		}
 	}
 	return nil
