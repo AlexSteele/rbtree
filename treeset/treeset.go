@@ -138,7 +138,6 @@ func (t *TreeSet) rotateRight(node *node) {
 	} else {
 		t.root = node.leftChild
 	}
-	node.parent.rightChild = node.leftChild
 	node.leftChild.parent = node.parent
 	node.parent = node.leftChild
 	node.leftChild = node.leftChild.rightChild

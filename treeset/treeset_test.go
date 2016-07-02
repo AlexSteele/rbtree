@@ -24,7 +24,55 @@ func TestAdd_UnsortedOrder(t *testing.T) {
 	
 	// Admittedly this test could be more precise.
 	s := New(IntComparator)
-	elems := []int{82, 16, 27, 11, 1, 2, 90, 7, 23, 26, 83}
+	elems := []int{80, 15, 30, 10, 1, 2, 90, 7, 23, 26, 83}
+	for _, v := range elems {
+		res := s.Add(v)
+		if res != nil {
+			t.Fatalf("Unexpected return: %v", res)
+		}
+	}
+	for _, v := range elems {
+		if !s.Contains(v) {
+			t.Fatalf("Set did not contain %v", v)
+		}
+	}
+}
+
+func TestAdd_Alternating(t *testing.T) {
+	s := New(IntComparator)
+	elems := []int{100, 50, 150, 75, 125, 25, 175, 40, 160, 10, 190}
+	for _, v := range elems {
+		res := s.Add(v)
+		if res != nil {
+			t.Fatalf("Unexpected return: %v", res)
+		}
+	}
+	for _, v := range elems {
+		if !s.Contains(v) {
+			t.Fatalf("Set did not contain %v", v)
+		}
+	}
+}
+
+func TestAdd_LeftTree(t *testing.T) {
+	s := New(IntComparator)
+	elems := []int{100, 50, 75, 25, 20, 40, 15, 30, 10, 5}
+	for _, v := range elems {
+		res := s.Add(v)
+		if res != nil {
+			t.Fatalf("Unexpected return: %v", res)
+		}
+	}
+	for _, v := range elems {
+		if !s.Contains(v) {
+			t.Fatalf("Set did not contain %v", v)
+		}
+	}
+}
+
+func TestAdd_RightTree(t *testing.T) {
+	s := New(IntComparator)
+	elems := []int{100, 150, 125, 175, 160, 180, 140, 155, 190}
 	for _, v := range elems {
 		res := s.Add(v)
 		if res != nil {
