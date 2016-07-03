@@ -1,19 +1,17 @@
 package set
 
-// Set represents a mathematical set, a collection which tracks the absence or
-// presence of values. Its three core operations, Add, Remove, and Contains, are
-// guaranteed to run in constant time.
+// TODO: Provide Union, Intersection operations.
+
+// Set represents an unordered collection of values where duplicates are disallowed.
 type Set interface {
 	Add(elem interface{}) interface{} 
 	Remove(elem interface{}) bool 
 	Contains(elem interface{}) bool
-	Clear() 
 	Length() int
 	IsEmpty() bool 
-	Union(other Set) Set
-	Intersect(other Set) Set
-	ToSlice() []interface{} 
+	Clear() 
 	Iter() Iterator
+	ToSlice() []interface{} 
 	String() string 
 }
 
@@ -21,13 +19,12 @@ type Iterator interface {
 	Next() (interface{}, bool)
 }
 
-// SortedSet represents a set whose elements fall under a total order -
-// each has a place relative to all others in the set.
+// SortedSet represents a totally ordered set. In addition to implementing the Set interface
+// it guarantees that that Iter and ToSlice will return values in sorted order
+// and provides First and Last, which return the first and last elements under the ordering.
 type SortedSet interface {
 	Set
 	
 	First() (interface{}, bool)
 	Last() (interface{}, bool)
 }
-
-type Comparator func(a interface{}, b interface{}) int

@@ -5,5 +5,5 @@ import (
 )
 
 func TestHashSet(t *testing.T) {
-	t.Fail()
+	t.Fatal("Not implemented.")
 }

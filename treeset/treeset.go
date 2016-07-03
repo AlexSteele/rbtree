@@ -7,7 +7,7 @@ import (
 // TreeSet is a red-black tree implementation of SortedSet.
 type TreeSet struct {
 	root   *node
-	cmp    set.Comparator
+	cmp    Comparator
 	length int
 }
 
@@ -28,7 +28,7 @@ type node struct {
 
 var nilNode = &node{color: black}
 
-func New(cmp set.Comparator) *TreeSet {
+func New(cmp Comparator) *TreeSet {
 	return &TreeSet{
 		root:   nilNode,
 		cmp:    cmp,
@@ -200,6 +200,17 @@ func (t *TreeSet) Remove(elem interface{}) bool {
 	return true
 }
 
+func getSuccessor(n *node) *node {
+	curr := n.rightChild
+	if curr == nilNode {
+		return curr
+	}
+	for curr.leftChild != nilNode {
+		curr = curr.leftChild
+	}
+	return curr 
+}
+
 func (t *TreeSet) rbRemoveFixup(child *node) {
 	
 	// Both toRemove and child are black (with child possibly nilNode)
@@ -293,17 +304,6 @@ func (t *TreeSet) getNode(elem interface{}) *node {
 	return nil
 }
 
-func getSuccessor(n *node) *node {
-	curr := n.rightChild
-	if curr == nilNode {
-		return curr
-	}
-	for curr.leftChild != nilNode {
-		curr = curr.leftChild
-	}
-	return curr 
-}
-
 func (t *TreeSet) First() (interface{}, bool) {
 	if t.root == nilNode {
 		return nil, false
@@ -339,14 +339,6 @@ func (t *TreeSet) IsEmpty() bool {
 	return t.length == 0
 }
 
-func (t *TreeSet) Union(other set.Set) set.Set {
-	return nil
-}
-
-func (t *TreeSet) Intersect(other set.Set) set.Set {
-	return nil
-}
-
 func (t *TreeSet) Iter() set.Iterator {
 	return nil
 }
@@ -356,7 +348,7 @@ func (t *TreeSet) ToSlice() []interface{} {
 }
 
 func (t *TreeSet) String() string {
-	return "SortedSet"
+	return "TreeSet"
 }
 
 type iterator struct{}

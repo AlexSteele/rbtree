@@ -307,15 +307,34 @@ func TestLength(t *testing.T) {
 }
 
 func TestIsEmpty(t *testing.T) {
-	
+	s := New(IntComparator)
+	if !s.IsEmpty() {
+		t.Fatal("New set wasn't empty")
+	}
+	s.Add(3)
+	if s.IsEmpty() {
+		t.Fatal("Set with element was empty.")
+	}
+	s.Remove(3)
+	if !s.IsEmpty() {
+		t.Fatal("Empty set wasn't empty")
+	}
 }
 
-// Benchmarks.
+// --Benchmarks-----
 
-func BenchmarkAdd(t *testing.B) {
-	
+func BenchmarkAdd_SortedOrder(b *testing.B) {
+	b.Fail()
 }
 
-func BenchmarkRemove(t *testing.B) {
-	
+func BenchmarkAdd_UnsortedOrder(b *testing.B) {
+	b.Fail()
+}
+
+func BenchmarkRemove_SortedOrder(b *testing.B) {
+	b.Fail()
+}
+
+func BenchmarkRemove_UnsortedOrder(b *testing.B) {
+	b.Fail()
 }

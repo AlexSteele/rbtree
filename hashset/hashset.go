@@ -1,12 +1,14 @@
 package hashset
 
-import "github.com/alexsteele/go-sets/set"
+import (
+	"github.com/alexsteele/go-sets/set"
+)
 
 type HashSet struct {
 	elems map[interface{}]struct{} 
 }
 
-func New() *HashSet {
+func New() set.Set {
 	return &HashSet{
 		elems: make(map[interface{}]struct{}, 0),
 	}
@@ -43,32 +45,32 @@ func (h *HashSet) IsEmpty() bool {
 	return h.Length() == 0 
 }
 
-func (h *HashSet) Union(other set.Set) Set {
-	newSet := make(map[interface{}]struct{}, h.Length() + other.Length()) // TODO: Sum of the lengths is likely inappropriate.
+// func (h *HashSet) Union(other set.Set) Set {
+// 	newSet := make(map[interface{}]struct{}, h.Length() + other.Length()) // TODO: Sum of the lengths is likely inappropriate.
 
-	// Note that this strategy gives preference to the elems in the second set. 
-	for elem, _ := range h.elems {
-		newSet[elem] = struct{}{} 
-	}
-	iter := other.Iter()
-	for elem, exists := iter.Next(); exists; elem, exists = iter.Next() {
-		newSet[elem] = struct{}{} 
-	}
+// 	// Note that this strategy gives preference to the elems in the second set. 
+// 	for elem, _ := range h.elems {
+// 		newSet[elem] = struct{}{} 
+// 	}
+// 	iter := other.Iter()
+// 	for elem, exists := iter.Next(); exists; elem, exists = iter.Next() {
+// 		newSet[elem] = struct{}{} 
+// 	}
 
-	return &HashSet{newSet}
-}
+// 	return &HashSet{newSet}
+// }
 
-func (h *HashSet) Intersect(other set.Set) Set {
-	newSet := make(map[interface{}]struct{}, len(h.elems))
+// func (h *HashSet) Intersect(other set.Set) Set {
+// 	newSet := make(map[interface{}]struct{}, len(h.elems))
 
-	for elem, _ := range h.elems {
-		if other.Contains(elem) {
-			newSet[elem] = struct{}{} 
-		}
-	}
+// 	for elem, _ := range h.elems {
+// 		if other.Contains(elem) {
+// 			newSet[elem] = struct{}{} 
+// 		}
+// 	}
 
-	return &HashSet{newSet}
-}
+// 	return &HashSet{newSet}
+// }
 
 func (h *HashSet) ToSlice() []interface{} {
 	slice := make([]interface{}, len(h.elems))
@@ -80,7 +82,7 @@ func (h *HashSet) ToSlice() []interface{} {
 	return slice
 }
 
-func (h *HashSet) Iter() Iterator {
+func (h *HashSet) Iter() set.Iterator {
 	elems := h.ToSlice() 
 	return &iterator{
 		elems: elems,
