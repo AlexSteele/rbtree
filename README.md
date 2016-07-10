@@ -1,2 +1,2 @@
-# go-sets
+# rbtree
 Go red-black tree implementation
