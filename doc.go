@@ -23,7 +23,7 @@
 //                isEmpty := tree.IsEmpty()
 //                tree.ForEach(func(elem interface{}) { fmt.Println(elem); })
 //
-//                fmt.Println("First: ", first
+//                fmt.Println("First: ", first)
 //                fmt.Println("Last: ", last)
 //                fmt.Println("Contains 100?: ", containsHundred)
 //                fmt.Println("Removed 100?: ", removedHundred)
