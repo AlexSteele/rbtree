@@ -10,7 +10,7 @@ import (
 //
 // A panic is expected if arguments of incompatible type are given.
 //
-// Package rbtree provides implementations for most types defined in package builtin. 
+// Package rbtree provides implementations for most types defined in package builtin.
 type Comparator func(a interface{}, b interface{}) int
 
 var Float32Comparator Comparator = func(a interface{}, b interface{}) int {
@@ -74,7 +74,7 @@ var Int64Comparator Comparator = func(a interface{}, b interface{}) int {
 		return 1
 	default:
 		return -1
-	}	
+	}
 }
 
 var Int8Comparator Comparator = func(a interface{}, b interface{}) int {
@@ -86,7 +86,7 @@ var Int8Comparator Comparator = func(a interface{}, b interface{}) int {
 		return 1
 	default:
 		return -1
-	}	
+	}
 }
 
 var RuneComparator Comparator = func(a interface{}, b interface{}) int {
@@ -96,7 +96,7 @@ var RuneComparator Comparator = func(a interface{}, b interface{}) int {
 // StringComparator wraps strings.Compare(a, b), returning the result of a lexicographic
 // comparison.
 var StringComparator Comparator = func(a interface{}, b interface{}) int {
-		return strings.Compare(a.(string), b.(string))
+	return strings.Compare(a.(string), b.(string))
 }
 
 var UIntComparator Comparator = func(a interface{}, b interface{}) int {

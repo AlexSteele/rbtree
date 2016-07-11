@@ -1,7 +1,11 @@
-package rbtree 
+package rbtree
 
 import (
+	"fmt"						// TODO: remove
+	"math/rand"
+	"sort"
 	"testing"
+	"time"
 )
 
 func TestAdd_SortedOrder(t *testing.T) {
@@ -21,7 +25,7 @@ func TestAdd_SortedOrder(t *testing.T) {
 }
 
 func TestAdd_UnsortedOrder(t *testing.T) {
-	
+
 	// Admittedly this test could be more precise.
 	s := New(IntComparator)
 	elems := []int{80, 15, 30, 10, 1, 2, 90, 7, 23, 26, 83}
@@ -216,9 +220,9 @@ func TestRemove_Bulk(t *testing.T) {
 		if s.Contains(v) {
 			t.Fatalf("Set still contained %v", v)
 		}
-		if l := s.Size(); l != len(elems) - i - 1 {
+		if l := s.Size(); l != len(elems)-i-1 {
 			t.Fatalf("Set's length improperly set. Expected %v. Got %v",
-				s.Size(), len(elems) - i - 1)
+				s.Size(), len(elems)-i-1)
 		}
 		for j := i + 1; j < len(elems); j++ {
 			if !s.Contains(elems[j]) {
@@ -263,32 +267,12 @@ func TestRemove_RightTree(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
-	// Tested implicitly. 
-}
-
-func TestClear(t *testing.T) {
-	s := New(IntComparator)
-	elems := []int{5, 4, 3, 2, 1} 
-	for _, v := range elems {
-		s.Add(v)
-	}
-
-	s.Clear()
-
-	if s.Size() != 0 {
-		t.Fatal("Set had nonzero length.")
-	}
-
-	for _, v := range elems {
-		if s.Contains(v) {
-			t.Fatalf("Set contained %v after clear.", v)
-		}
-	}
+	// Tested implicitly.
 }
 
 func TestSize(t *testing.T) {
 	s := New(IntComparator)
-	elems := []int{19, 73, 930, 1694, 3910, 82, 17, 16, 15, 14, 91}
+	elems := []int{20, 70, 900, 1500, 4000, 80, 17, 16, 15, 14, 91}
 	if s.Size() != 0 {
 		t.Fatal("Nonzero length.")
 	}
@@ -300,8 +284,8 @@ func TestSize(t *testing.T) {
 	}
 	for k, v := range elems {
 		s.Remove(v)
-		if l := s.Size(); l != len(elems) - len(elems[:k+1]) {
-			t.Fatalf("Incorrect length. Expected %v. Got %v", len(elems) - len(elems[:k+1]), l)
+		if l := s.Size(); l != len(elems)-len(elems[:k+1]) {
+			t.Fatalf("Incorrect length. Expected %v. Got %v", len(elems)-len(elems[:k+1]), l)
 		}
 	}
 }
@@ -321,20 +305,142 @@ func TestIsEmpty(t *testing.T) {
 	}
 }
 
+func TestForEach(t *testing.T) {
+	s := New(IntComparator)
+	elems := []int{0, 9, 1, 8, 6, 2, 3, 4, 7, 5, 15, 11, 12, 20, 17, 18, 16, 19, 14, 13}
+	for _, v := range elems {
+		s.Add(v)
+	}
+
+	sorted := make([]int, len(elems))
+	copy(sorted, elems)
+	sort.Ints(elems)
+
+	i := 0
+	f := func(e interface{}) {
+		if e.(int) != elems[i] {
+			t.Fatalf("Expected %v. Got %v", elems[i], e.(int))
+		}
+		i++
+	}
+	s.ForEach(f)
+}
+
+func TestToSlice(t *testing.T) {
+	s := New(IntComparator)
+	elems := []int{0, 9, 1, 8, 6, 2, 3, 4, 7, 5, 15, 11, 12, 20, 17, 18, 16, 19, 14, 13}
+	for _, v := range elems {
+		s.Add(v)
+	}
+
+	sorted := make([]int, len(elems))
+	copy(sorted, elems)
+	sort.Ints(sorted)
+
+	got := s.ToSlice()
+
+	for i, v := range sorted {
+		if got[i] != v {
+			t.Fatalf("Expected %v. Got %v", v, got[i])
+		}
+	}
+}
+
+func TestClear(t *testing.T) {
+	s := New(IntComparator)
+	elems := []int{5, 4, 3, 2, 1}
+	for _, v := range elems {
+		s.Add(v)
+	}
+
+	s.Clear()
+
+	if s.Size() != 0 {
+		t.Fatal("Set had nonzero length.")
+	}
+
+	for _, v := range elems {
+		if s.Contains(v) {
+			t.Fatalf("Set contained %v after clear.", v)
+		}
+	}
+}
+
 // --Benchmarks-----
 
-func BenchmarkAdd_SortedOrder(b *testing.B) {
-	b.Fail()
+const startingSize = 50000 // Size of the tree before timing any ops.
+const opsToBench = 1000    // Time this many ops per run.
+
+func BenchmarkAdd_Sorted_Ints(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := New(IntComparator)
+		rand.Seed(time.Now().UTC().UnixNano())
+		for j := 0; j < startingSize; j++ {
+			s.Add(rand.Int())
+		}
+		b.StartTimer()
+
+		// Timed section.
+		for j := startingSize; j < startingSize + opsToBench; j++ {
+			s.Add(j)
+		}
+	}
 }
 
-func BenchmarkAdd_UnsortedOrder(b *testing.B) {
-	b.Fail()
+func BenchmarkAdd_Random_Ints(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := New(IntComparator)
+		rand.Seed(time.Now().UTC().UnixNano())
+		for j := 0; j < startingSize; j++ {
+			s.Add(rand.Int())
+		}
+		b.StartTimer()
+
+		// Timed section.
+		for j := 0; j < opsToBench; j++ {
+			s.Add(rand.Int())
+		}
+	}
 }
 
-func BenchmarkRemove_SortedOrder(b *testing.B) {
-	b.Fail()
+func BenchmarkRemove_SortedOrder_Ints(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := New(IntComparator)
+		rand.Seed(time.Now().UTC().UnixNano())
+		for j := 0; j < startingSize; j++ {
+			s.Add(rand.Int())
+		}
+		for j := 0; j < opsToBench; j++ {
+			s.Add(j)
+		}
+		b.StartTimer()
+
+		// Timed section.
+		for j := 0; j < opsToBench; j++ {
+			s.Remove(j)
+		}
+	}
 }
 
-func BenchmarkRemove_UnsortedOrder(b *testing.B) {
-	b.Fail()
+func BenchmarkRemove_Random_Ints(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := New(IntComparator)
+		rand.Seed(time.Now().UTC().UnixNano())
+		elems := make([]int, startingSize)
+		for j := 0; j < startingSize; j++ {
+			r := rand.Int()
+			elems = append(elems, r)
+			s.Add(r)
+		}
+		b.StartTimer()
+
+		// Timed section.
+		for j := 0; j < opsToBench; j++ {
+			s.Remove(elems[j])
+		}
+	}
 }

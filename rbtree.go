@@ -200,7 +200,9 @@ func (t *RBTree) Remove(elem interface{}) bool {
 		// toRemove is not the root. It's black and child is red. 
 		child.color = black
 	} else {
-		t.rbRemoveFixup(child)
+		// Manually pass in parent since we never set the parent of nilNode
+		// even though its parent is conceptually toRemove.parent in this case
+		t.rbRemoveFixup(child, toRemove.parent)
 	}
 	
 	t.size -= 1
@@ -218,28 +220,28 @@ func getSuccessor(n *node) *node {
 	return curr 
 }
 
-func (t *RBTree) rbRemoveFixup(child *node) {
+func (t *RBTree) rbRemoveFixup(child *node, parent *node) {
 	for {
-		if child.parent == nilNode || child.parent == nil {
+		if parent == nilNode {
 			return 
 		}
 		
 		var sibling *node
-		if child == child.parent.leftChild {
-			sibling = child.parent.rightChild
+		if child == parent.leftChild {
+			sibling = parent.rightChild
 		} else {
-			sibling = child.parent.leftChild
+			sibling = parent.leftChild
 		}
 
 		if sibling.color == red {
-			child.parent.color = red
+			parent.color = red
 			sibling.color = black
-			if child == child.parent.leftChild {
-				t.rotateLeft(child.parent)
-				sibling = child.parent.rightChild
+			if child == parent.leftChild {
+				t.rotateLeft(parent)
+				sibling = parent.rightChild
 			} else {
-				t.rotateRight(child.parent)
-				sibling = child.parent.leftChild
+				t.rotateRight(parent)
+				sibling = parent.leftChild
 			}
 		}
 		if sibling.color == black &&
@@ -247,24 +249,26 @@ func (t *RBTree) rbRemoveFixup(child *node) {
 			sibling.rightChild.color == black {
 
 			sibling.color = red
-			if child.parent.color == black {
+			if parent.color == black {
 				
 				// Repeat the fixup with the parent.
-				child = child.parent
+				child = parent
+				parent = child.parent
 				continue 
 			} else {
-				child.parent.color = black
+				parent.color = black
 			}
 		} else {
 			if sibling.color == black {
-				if child == child.parent.leftChild &&
+				if child == parent.leftChild &&
 					sibling.rightChild.color == black &&
 					sibling.leftChild.color == red {
 
 					t.rotateRight(sibling)
-				} else if child == child.parent.rightChild &&
+				} else if child == parent.rightChild &&
 					sibling.leftChild.color == black &&
 					sibling.rightChild.color == red {
+
 
 					sibling.color = red
 					sibling.rightChild.color = black
@@ -272,15 +276,21 @@ func (t *RBTree) rbRemoveFixup(child *node) {
 				}
 			}
 
-			sibling.color = child.parent.color
-			child.parent.color = black
+			if child == parent.leftChild {
+				sibling = parent.rightChild
+			} else {
+				sibling = parent.leftChild
+			}
 
-			if child == child.parent.leftChild {
+			sibling.color = parent.color
+			parent.color = black
+
+			if child == parent.leftChild {
 				sibling.rightChild.color = black
-				t.rotateLeft(child.parent)
+				t.rotateLeft(parent)
 			} else {
 				sibling.leftChild.color = black
-				t.rotateRight(child.parent)
+				t.rotateRight(parent)
 			}
 		}
 		
