@@ -1,7 +1,6 @@
 package rbtree
 
 import (
-	"fmt"						// TODO: remove
 	"math/rand"
 	"sort"
 	"testing"
