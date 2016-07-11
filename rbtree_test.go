@@ -1,4 +1,4 @@
-package treeset
+package rbtree 
 
 import (
 	"testing"
@@ -93,7 +93,7 @@ func TestAdd_DuplicateElement(t *testing.T) {
 	if old != 1 {
 		t.Fatal("Add duplicate did not return old element.")
 	}
-	if s.Length() != 1 {
+	if s.Size() != 1 {
 		t.Fatal("Add duplicate changed length.")
 	}
 }
@@ -106,7 +106,7 @@ func TestRemove_RootIsOnlyElem(t *testing.T) {
 	if !s.Remove("abc") {
 		t.Fatal("Failed to remove abc.")
 	}
-	if s.Length() != 0 {
+	if s.Size() != 0 {
 		t.Fatal("Removal of root didn't set length.")
 	}
 	if s.Contains("abc") {
@@ -121,7 +121,7 @@ func TestRemove_RootHasRightChild(t *testing.T) {
 	if !s.Remove("a") {
 		t.Fatal("Failed to remove a.")
 	}
-	if s.Length() != 1 {
+	if s.Size() != 1 {
 		t.Fatal("Removal of root didn't set length.")
 	}
 	if s.Contains("a") {
@@ -140,7 +140,7 @@ func TestRemove_RootHasRightChildWithLeftChild(t *testing.T) {
 	if !s.Remove("b") {
 		t.Fatal("Failed to remove b.")
 	}
-	if s.Length() != 2 {
+	if s.Size() != 2 {
 		t.Fatal("Removal of root didn't set length.")
 	}
 	if s.Contains("b") {
@@ -162,7 +162,7 @@ func TestRemove_RootHasLeftAndRightChildren(t *testing.T) {
 	if !s.Remove("b") {
 		t.Fatal("Failed to remove b.")
 	}
-	if s.Length() != 2 {
+	if s.Size() != 2 {
 		t.Fatal("Removal of root didn't set length.")
 	}
 	if s.Contains("b") {
@@ -184,7 +184,7 @@ func TestRemove_NonRootLeaf(t *testing.T) {
 	if !s.Remove("d") {
 		t.Fatal("Failed to remove non-root leaf.")
 	}
-	if s.Length() != 2 {
+	if s.Size() != 2 {
 		t.Fatal("Removal of element didn't set length.")
 	}
 	if s.Contains("d") {
@@ -195,7 +195,7 @@ func TestRemove_NonRootLeaf(t *testing.T) {
 	if !s.Remove("b") {
 		t.Fatal("Failed to remove non-root leaf.")
 	}
-	if s.Length() != 2 {
+	if s.Size() != 2 {
 		t.Fatal("Removal of element didn't set length.")
 	}
 	if s.Contains("b") {
@@ -216,9 +216,9 @@ func TestRemove_Bulk(t *testing.T) {
 		if s.Contains(v) {
 			t.Fatalf("Set still contained %v", v)
 		}
-		if l := s.Length(); l != len(elems) - i - 1 {
+		if l := s.Size(); l != len(elems) - i - 1 {
 			t.Fatalf("Set's length improperly set. Expected %v. Got %v",
-				s.Length(), len(elems) - i - 1)
+				s.Size(), len(elems) - i - 1)
 		}
 		for j := i + 1; j < len(elems); j++ {
 			if !s.Contains(elems[j]) {
@@ -275,7 +275,7 @@ func TestClear(t *testing.T) {
 
 	s.Clear()
 
-	if s.Length() != 0 {
+	if s.Size() != 0 {
 		t.Fatal("Set had nonzero length.")
 	}
 
@@ -286,21 +286,21 @@ func TestClear(t *testing.T) {
 	}
 }
 
-func TestLength(t *testing.T) {
+func TestSize(t *testing.T) {
 	s := New(IntComparator)
 	elems := []int{19, 73, 930, 1694, 3910, 82, 17, 16, 15, 14, 91}
-	if s.Length() != 0 {
+	if s.Size() != 0 {
 		t.Fatal("Nonzero length.")
 	}
 	for k, v := range elems {
 		s.Add(v)
-		if l := s.Length(); l != len(elems[:k+1]) {
+		if l := s.Size(); l != len(elems[:k+1]) {
 			t.Fatalf("Incorrect length. Expected %v. Got %v", len(elems[:k+1]), l)
 		}
 	}
 	for k, v := range elems {
 		s.Remove(v)
-		if l := s.Length(); l != len(elems) - len(elems[:k+1]) {
+		if l := s.Size(); l != len(elems) - len(elems[:k+1]) {
 			t.Fatalf("Incorrect length. Expected %v. Got %v", len(elems) - len(elems[:k+1]), l)
 		}
 	}

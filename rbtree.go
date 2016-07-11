@@ -1,26 +1,28 @@
-package treeset
+package rbtree
 
 import (
-	"github.com/alexsteele/go-sets/set"
+	"fmt"
+	"strconv"
 )
 
-// TreeSet is a red-black tree implementation of SortedSet.
-type TreeSet struct {
-	root   *node
-	cmp    Comparator
-	length int
+// RBTree is a red-black tree implementation of a sorted set, with element
+// ordering and equality determined by a given comparator function.
+type RBTree struct {
+	root *node
+	cmp  Comparator
+	size int
 }
 
 type colorT bool
 
 const (
-	red colorT   = true
+	red   colorT = true
 	black colorT = false
 )
 
 type node struct {
-	color      colorT
 	elem       interface{}
+	color      colorT
 	parent     *node
 	leftChild  *node
 	rightChild *node
@@ -28,15 +30,18 @@ type node struct {
 
 var nilNode = &node{color: black}
 
-func New(cmp Comparator) *TreeSet {
-	return &TreeSet{
-		root:   nilNode,
-		cmp:    cmp,
-		length: 0,
+// New returns an empty RBTree which uses the given comparator.
+func New(cmp Comparator) *RBTree {
+	return &RBTree{
+		root: nilNode,
+		cmp:  cmp,
+		size: 0,
 	}
 }
 
-func (t *TreeSet) Add(elem interface{}) interface{} {
+// Add adds an element to the tree, removing and returning any element equal to the one
+// given, or nil if none exist.
+func (t *RBTree) Add(elem interface{}) interface{} {
 	curr, parent := t.root, t.root
 	var cmp int
 	for curr != nilNode {
@@ -70,11 +75,11 @@ func (t *TreeSet) Add(elem interface{}) interface{} {
 	}
 
 	t.rbInsertFixup(toAdd)
-	t.length += 1
+	t.size += 1
 	return nil
 }
 
-func (t *TreeSet) rbInsertFixup(node *node) {
+func (t *RBTree) rbInsertFixup(node *node) {
 	for {
 		if node.parent == nilNode {
 			node.color = black
@@ -120,7 +125,7 @@ func getUncle(node *node) *node {
 	}
 }
 
-func (t *TreeSet) rotateLeft(node *node) {
+func (t *RBTree) rotateLeft(node *node) {
 	if node == node.parent.leftChild {
 		node.parent.leftChild = node.rightChild				
 	} else if node == node.parent.rightChild {
@@ -137,7 +142,7 @@ func (t *TreeSet) rotateLeft(node *node) {
 	node.parent.leftChild = node
 }
 
-func (t *TreeSet) rotateRight(node *node) {
+func (t *RBTree) rotateRight(node *node) {
 	if node == node.parent.leftChild {
 		node.parent.leftChild = node.leftChild
 	} else if node == node.parent.rightChild {
@@ -154,7 +159,9 @@ func (t *TreeSet) rotateRight(node *node) {
 	node.parent.rightChild = node
 }
 
-func (t *TreeSet) Remove(elem interface{}) bool {
+// Remove removes an element from the tree, using the tree's comparator function
+// for equality determination. Returns true if an element is removed, false otherwise.
+func (t *RBTree) Remove(elem interface{}) bool {
 	toRemove := t.getNode(elem)
 	if toRemove == nil {
 		return false
@@ -190,13 +197,13 @@ func (t *TreeSet) Remove(elem interface{}) bool {
 	if toRemove.color == red {
 		// toRemove is not the root. We're done.
 	} else if child.color == red {
-		// toRemove is not the root. It is black and child is red. 
+		// toRemove is not the root. It's black and child is red. 
 		child.color = black
 	} else {
 		t.rbRemoveFixup(child)
 	}
 	
-	t.length -= 1
+	t.size -= 1
 	return true
 }
 
@@ -211,10 +218,7 @@ func getSuccessor(n *node) *node {
 	return curr 
 }
 
-func (t *TreeSet) rbRemoveFixup(child *node) {
-	
-	// Both toRemove and child are black (with child possibly nilNode)
-
+func (t *RBTree) rbRemoveFixup(child *node) {
 	for {
 		if child.parent == nilNode || child.parent == nil {
 			return 
@@ -284,12 +288,13 @@ func (t *TreeSet) rbRemoveFixup(child *node) {
 	}
 }
 
-func (t *TreeSet) Contains(elem interface{}) bool {
+// Contains uses the tree's comparator to check if the given element exists.
+func (t *RBTree) Contains(elem interface{}) bool {
 	return t.getNode(elem) != nil
 }
 
 // Returns nil if no node with the given element exists.
-func (t *TreeSet) getNode(elem interface{}) *node {
+func (t *RBTree) getNode(elem interface{}) *node {
 	curr := t.root
 	for curr != nilNode {
 		cmp := t.cmp(elem, curr.elem)
@@ -304,7 +309,8 @@ func (t *TreeSet) getNode(elem interface{}) *node {
 	return nil
 }
 
-func (t *TreeSet) First() (interface{}, bool) {
+// First returns the tree's smallest element or (nil, false) if t.Size() == 0.
+func (t *RBTree) First() (interface{}, bool) {
 	if t.root == nilNode {
 		return nil, false
 	}
@@ -315,7 +321,8 @@ func (t *TreeSet) First() (interface{}, bool) {
 	return curr, true
 }
 
-func (t *TreeSet) Last() (interface{}, bool) {
+// Last returns the tree's largest element or (nil, false) if t.Size() == 0.
+func (t *RBTree) Last() (interface{}, bool) {
 	if t.root == nilNode {
 		return nil, false
 	}
@@ -326,32 +333,58 @@ func (t *TreeSet) Last() (interface{}, bool) {
 	return curr, true
 }
 
-func (t *TreeSet) Clear() {
+// Size returns the number of elements in the tree.
+func (t *RBTree) Size() int {
+	return t.size
+}
+
+// IsEmpty returns whether the tree is empty.
+func (t *RBTree) IsEmpty() bool {
+	return t.size == 0
+}
+
+// ForEach iterates over the tree's elements in sorted order, calling f
+// on each. Be wary that it uses a recursive in-order traversal.
+func (t *RBTree) ForEach(f func(interface{})) {
+	t.forEach(t.root, f)
+}
+
+func (t *RBTree) forEach(n *node, f func(interface{})) {
+	if n == nilNode {
+		return
+	}
+
+	t.forEach(n.leftChild, f)
+	f(n.elem)
+	t.forEach(n.rightChild, f)
+}
+
+// ToSlice returns the tree's elements in a sorted slice. Be wary that it
+// uses a recursive in-order traversal.
+func (t *RBTree) ToSlice() (s []interface{}) {
+	t.ForEach(func(a interface{}) {
+		s = append(s, a)
+	})
+	return
+}
+
+// Clear removes all elements. 
+func (t *RBTree) Clear() {
 	t.root = nilNode
-	t.length = 0
+	t.size = 0
 }
 
-func (t *TreeSet) Length() int {
-	return t.length
-}
-
-func (t *TreeSet) IsEmpty() bool {
-	return t.length == 0
-}
-
-func (t *TreeSet) Iter() set.Iterator {
-	return nil
-}
-
-func (t *TreeSet) ToSlice() []interface{} {
-	return nil
-}
-
-func (t *TreeSet) String() string {
-	return "TreeSet"
-}
-
-type iterator struct{}
-func (i *iterator) Next() (interface{}, bool) {
-	return nil, false
+// String returns a string representation of the tree, including its
+// size and first and last elements, if they exist. 
+func (t *RBTree) String() string {
+	s := "RBTree<"
+	s += "Size: " + strconv.Itoa(t.Size())
+	if first, exists := t.First(); exists {
+		s += ", First: " + fmt.Sprintf("%v", first)
+	}
+	if last, exists := t.Last(); exists {
+		s += ", Last: " + fmt.Sprintf("%v", last)
+	}
+	s += ">"
+	return s
 }
