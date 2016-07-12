@@ -7,7 +7,7 @@
 //        import (
 //                "fmt"
 //
-//                "github.com/alexsteele/rbtree"
+//                "github.com/AlexSteele/rbtree"
 //        )
 //
 //        func main() {
